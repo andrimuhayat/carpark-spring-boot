@@ -1,8 +1,6 @@
 package com.andri.carpark.service.impl;
 
-import com.andri.carpark.dto.CarParkInfoDto;
-import com.andri.carpark.dto.CarParkInfoHeaderDto;
-import com.andri.carpark.dto.CarParkInformationDto;
+import com.andri.carpark.dto.*;
 import com.andri.carpark.model.CarParks;
 import com.andri.carpark.repository.CarParkRepository;
 import com.andri.carpark.service.CarParkService;
@@ -16,6 +14,8 @@ import kong.unirest.json.JSONArray;
 import kong.unirest.json.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.env.Environment;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -25,6 +25,7 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -93,6 +94,24 @@ public class CarkParkServiceImpl implements CarParkService {
 				e.printStackTrace();
 			}
 		});
+	}
+
+	@Override
+	public PagedResponse<CarParkDto> getCarParks(Pageable pageable, double latitude, double longitude) {
+		Page<Map<String, Object>> carParksPage = carParkRepository.getCarParks(pageable, latitude, longitude);
+		List<CarParkDto> carParkList = carParksPage.stream().map(carPark -> {
+			CarParkDto carParkDto = new CarParkDto();
+			carParkDto.setAddress((String) carPark.get("address"));
+			carParkDto.setTotal_lots((Integer) carPark.get("total_lots"));
+			carParkDto.setAvailable_lots((Integer) carPark.get("available_lots"));
+			carParkDto.setLatitude((Double) carPark.get("y_coord"));
+			carParkDto.setLongitude((Double) carPark.get("x_coord"));
+			carParkDto.setDistance_in_km(Double.parseDouble(df.format(carPark.get("distance_in_km"))));
+			return carParkDto;
+		}).collect(Collectors.toList());
+
+		return new PagedResponse<>(carParkList, carParksPage.getNumber(),
+				carParksPage.getSize(), carParksPage.getTotalElements(), carParksPage.getTotalPages(), carParksPage.isLast());
 	}
 
 	@Async
