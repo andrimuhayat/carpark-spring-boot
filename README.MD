@@ -33,11 +33,11 @@ of concern within the architecture with [Uncle Bob Clean Architecture](https://w
 - [SDKMAN](https://sdkman.io/) used to help you get needed JDK or SDK with ease
 
 ## Scheduler
-- The **dataset(Car information)** that provides from https://data.gov.sg/dataset/hdb-carpark-information will fetching using automatically at the midnight then the data will convert from SVY21ToLatLng and do insert/update to the database. but at the first will process when system is started
+- The **dataset(Car information)** that provides from https://data.gov.sg/dataset/hdb-carpark-information will fetching automatically at the midnight then the data will convert from SVY21ToLatLng and do insert/update to the database. but at the first will process when system is started
 - The **Car availability** will fetch automatically from API in every 2 minutes and insert/update to database. but at the first will process when system is started
 
 ## Redis Cache
-- The response data from API(http://0.0.0.0:9092/carparks/nearest?latitude=1.2855825549923094&longitude=103.80321526415918) already store in redis cache, when calling the get API then data will serve from the cache of redis
+- The response data from API(/carparks/nearest?latitude=1.2855825549923094&longitude=103.80321526415918) already store in redis cache, when calling the get API then data will serve from the cache of redis
 - Data expire in redis in will 2 Minutes and will call to the db and store it again to the redis
 
 ## How to run this project
