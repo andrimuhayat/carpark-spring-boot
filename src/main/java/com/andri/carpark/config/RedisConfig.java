@@ -23,15 +23,21 @@ public class RedisConfig {
 
 	@Bean
 	JedisConnectionFactory jedisConnectionFactory() {
-		RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration("localhost", 6379);
+		RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration(host, 6379);
 		redisStandaloneConfiguration.setPassword(RedisPassword.of(password));
 		return new JedisConnectionFactory(redisStandaloneConfiguration);
 	}
 
 	@Bean
-	public RedisTemplate redisTemplate() {
-		RedisTemplate template = new RedisTemplate<>();
+	public RedisTemplate<String, Object> template() {
+		RedisTemplate<String, Object> template = new RedisTemplate<>();
 		template.setConnectionFactory(jedisConnectionFactory());
+		template.setKeySerializer(new StringRedisSerializer());
+		template.setHashKeySerializer(new StringRedisSerializer());
+		template.setHashValueSerializer(new Jackson2JsonRedisSerializer<>(Object.class));
+//		template.setHashValueSerializer(new CustomRedisSerializer());
+		template.setEnableTransactionSupport(true);
+		template.afterPropertiesSet();
 		return template;
 	}
 }
