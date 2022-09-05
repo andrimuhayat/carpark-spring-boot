@@ -15,7 +15,6 @@ public class AppStartup implements ApplicationListener<ApplicationReadyEvent> {
 	@Override
 	public void onApplicationEvent(ApplicationReadyEvent applicationReadyEvent) {
 		System.out.println("On startup");
-		carParkService.fetchCarParkAvailibilty();
 		carParkService.fetchCarParkInformation();
 		/* task execution */
 	}
