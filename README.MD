@@ -35,4 +35,6 @@ of concern within the architecture with [Uncle Bob Clean Architecture](https://w
 ## How to run this project
 open terminal cd to this project's root folder and run script below
 
-    mvn clean install -DskipTests && java -jar ./target/*.jar
+    docker-compose up
+
+## 
