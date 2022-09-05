@@ -13,6 +13,7 @@ import kong.unirest.JsonNode;
 import kong.unirest.json.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.env.Environment;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.text.DecimalFormat;
@@ -67,6 +68,7 @@ public class CarkParkServiceImpl implements CarParkService {
 		}
 	}
 
+	@Async
 	public void InserOrUpdateCarParkInformation(CarParkInformationDto carParkInformationDto) {
 		Map<String, Double> latLngData = SVY21ToLatLng(carParkInformationDto.x_coord, carParkInformationDto.y_coord);
 		CarParks carPark;
