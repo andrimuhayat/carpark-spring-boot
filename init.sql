@@ -2,7 +2,7 @@
 
 CREATE TABLE IF NOT EXISTS car_parks (
                        id SERIAL PRIMARY KEY,
-                       car_park character varying(255),
+                       car_park character varying(255) UNIQUE,
                        address VARCHAR,
                        x_coord double precision,
                        y_coord double precision,
@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS car_parks (
                        gantry_height character varying(10),
                        car_park_basement character varying(10),
                        created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-                       updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
-);
+                       updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+                       CONSTRAINT car_park_unique UNIQUE (car_park)
+    );
 GRANT ALL PRIVILEGES ON DATABASE postgres to "postgres";
