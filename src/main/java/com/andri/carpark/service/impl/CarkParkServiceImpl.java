@@ -120,25 +120,26 @@ public class CarkParkServiceImpl implements CarParkService {
 			try {
 				List<CarParkInfoHeaderDto> carParkAvailabilityDtos = objectMapper.readValue(items.getJSONArray("carpark_data").toString(), new TypeReference<>() {
 				});
-				CompletableFuture<List<CarParks>> carParkAvailabilityList = inserOrUpdateCarParkAvailability(carParkAvailabilityDtos);
-				this.carParkRepository.saveAll(carParkAvailabilityList.get());
+//				CompletableFuture<List<CarParks>> carParkAvailabilityList = inserOrUpdateCarParkAvailability(carParkAvailabilityDtos);
+				carParkAvailabilityDtos.forEach(this::inserOrUpdateCarParkAvailability);
+//				this.carParkRepository.saveAll(carParkAvailabilityList.get());
 				log.info("Success Insert or update carParkAvailability");
-			} catch (JsonProcessingException | ExecutionException | InterruptedException e) {
+			} catch (JsonProcessingException e) {
 				e.printStackTrace();
 			}
 		});
 	}
 
 	@Async
-	public CompletableFuture<List<CarParks>> inserOrUpdateCarParkAvailability(List<CarParkInfoHeaderDto> carParkInfoHeaderDtos) {
-		List<CarParks> carParkList = new ArrayList<>();
-		carParkInfoHeaderDtos.forEach(carParkInfoHeaderDto -> {
-			String carParkNumber = carParkInfoHeaderDto.carpark_number;
+	public void inserOrUpdateCarParkAvailability(CarParkInfoHeaderDto carParkInfoHeaderDtos) {
+//		List<CarParks> carParkList = new ArrayList<>();
+//		carParkInfoHeaderDtos.forEach(carParkInfoHeaderDto -> {
+			String carParkNumber = carParkInfoHeaderDtos.carpark_number;
 			int totalLoats = 0;
 			int lotsAvailable = 0;
 			Optional<CarParks> carParkOpt = this.carParkRepository.findCarParksByCarPark(carParkNumber);
 
-			for (CarParkInfoDto c : carParkInfoHeaderDto.carpark_info) {
+			for (CarParkInfoDto c : carParkInfoHeaderDtos.carpark_info) {
 				totalLoats += Integer.parseInt(c.total_lots);
 				lotsAvailable += Integer.parseInt(c.lots_available);
 			}
@@ -156,9 +157,10 @@ public class CarkParkServiceImpl implements CarParkService {
 				carPark.setAvailableLots(lotsAvailable);
 				carPark.setCarPark(carParkNumber);
 			}
-			carParkList.add(carPark);
-		});
-		return CompletableFuture.completedFuture(carParkList);
+		this.carParkRepository.save(carPark);
+//			carParkList.add(carPark);
+//		});
+//		return CompletableFuture.completedFuture(carParkList);
 	}
 
 	@Async
@@ -171,6 +173,15 @@ public class CarkParkServiceImpl implements CarParkService {
 			assert latLngData != null;
 			carPark.setXcoord(latLngData.get("longitude"));
 			carPark.setYcoord(latLngData.get("latitude"));
+			carPark.setAddress(carParkInformationDto.address);
+			carPark.setCarParkDecks(Integer.parseInt(carParkInformationDto.car_park_decks));
+			carPark.setCarParkType(carParkInformationDto.car_park_type);
+			carPark.setTypeOfParkingSystem(carParkInformationDto.type_of_parking_system);
+			carPark.setCarParkBasement(carParkInformationDto.car_park_basement);
+			carPark.setFreeParking(carParkInformationDto.free_parking);
+			carPark.setGantryHeight(carParkInformationDto.gantry_height);
+			carPark.setShortTermParking(carParkInformationDto.short_term_parking);
+			carPark.setNightParking(carParkInformationDto.night_parking);
 			carPark.setUpdatedAt(Instant.now());
 		} else {
 			carPark = new CarParks();
