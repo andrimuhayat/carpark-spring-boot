@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,7 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,16 +36,48 @@ public class CarkParkServiceImpl implements CarParkService {
 	private final UnirestHttpClient unirestHttpClient;
 	private final Environment environment;
 	private final ObjectMapper objectMapper;
+	private final RedisTemplate<String, Object> redisTemplate;
 	private final CarParkRepository carParkRepository;
 	private static final DecimalFormat df = new DecimalFormat("0.00");
 
-	public CarkParkServiceImpl(UnirestHttpClient unirestHttpClient, Environment environment, ObjectMapper objectMapper, CarParkRepository carParkRepository) {
+	public CarkParkServiceImpl(UnirestHttpClient unirestHttpClient, Environment environment, ObjectMapper objectMapper, RedisTemplate<String, Object> redisTemplate, CarParkRepository carParkRepository) {
 		this.unirestHttpClient = unirestHttpClient;
 		this.environment = environment;
 		this.objectMapper = objectMapper;
+		this.redisTemplate = redisTemplate;
 		this.carParkRepository = carParkRepository;
 	}
 
+	@Override
+	public PagedResponse<CarParkDto> getCarParks(Pageable pageable, double latitude, double longitude) {
+		String keyRedis = "car_parks_page=" + pageable.getPageSize() + "&per_page=" + pageable.getPageNumber();
+
+		PagedResponse<CarParkDto> carParkResponse;
+		Object carParkObj = redisTemplate.opsForHash().get(keyRedis, keyRedis);
+		carParkResponse = objectMapper.convertValue(carParkObj, new TypeReference<>() {
+		});
+
+		if (carParkObj == null) {
+			Page<Map<String, Object>> carParksPage = carParkRepository.getCarParks(pageable, latitude, longitude);
+			List<CarParkDto> carParkList = carParksPage.stream().map(carPark -> {
+				CarParkDto carParkDto = new CarParkDto();
+				carParkDto.setAddress((String) carPark.get("address"));
+				carParkDto.setTotal_lots((Integer) carPark.get("total_lots"));
+				carParkDto.setAvailable_lots((Integer) carPark.get("available_lots"));
+				carParkDto.setLatitude((Double) carPark.get("y_coord"));
+				carParkDto.setLongitude((Double) carPark.get("x_coord"));
+				carParkDto.setDistance_in_km(Double.parseDouble(df.format(carPark.get("distance_in_km"))));
+				return carParkDto;
+			}).collect(Collectors.toList());
+
+			carParkResponse = new PagedResponse<>(carParkList, carParksPage.getNumber(),
+					carParksPage.getSize(), carParksPage.getTotalElements(), carParksPage.getTotalPages(), carParksPage.isLast());
+
+			redisTemplate.opsForHash().put(keyRedis, keyRedis, carParkResponse);
+			redisTemplate.expire(keyRedis, 60, TimeUnit.SECONDS);
+		}
+		return carParkResponse;
+	}
 
 	@Override
 	public void fetchCarParkInformation() {
@@ -63,9 +97,7 @@ public class CarkParkServiceImpl implements CarParkService {
 
 			List<CarParkInformationDto> carParkInformationDtos = objectMapper.readValue(recordDataString, new TypeReference<>() {
 			});
-
 			carParkInformationDtos.forEach(this::InserOrUpdateCarParkInformation);
-
 			log.info("Success Insert or update carParkInformation");
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
@@ -94,24 +126,6 @@ public class CarkParkServiceImpl implements CarParkService {
 				e.printStackTrace();
 			}
 		});
-	}
-
-	@Override
-	public PagedResponse<CarParkDto> getCarParks(Pageable pageable, double latitude, double longitude) {
-		Page<Map<String, Object>> carParksPage = carParkRepository.getCarParks(pageable, latitude, longitude);
-		List<CarParkDto> carParkList = carParksPage.stream().map(carPark -> {
-			CarParkDto carParkDto = new CarParkDto();
-			carParkDto.setAddress((String) carPark.get("address"));
-			carParkDto.setTotal_lots((Integer) carPark.get("total_lots"));
-			carParkDto.setAvailable_lots((Integer) carPark.get("available_lots"));
-			carParkDto.setLatitude((Double) carPark.get("y_coord"));
-			carParkDto.setLongitude((Double) carPark.get("x_coord"));
-			carParkDto.setDistance_in_km(Double.parseDouble(df.format(carPark.get("distance_in_km"))));
-			return carParkDto;
-		}).collect(Collectors.toList());
-
-		return new PagedResponse<>(carParkList, carParksPage.getNumber(),
-				carParksPage.getSize(), carParksPage.getTotalElements(), carParksPage.getTotalPages(), carParksPage.isLast());
 	}
 
 	@Async
