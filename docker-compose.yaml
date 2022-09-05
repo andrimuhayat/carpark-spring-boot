@@ -1,0 +1,57 @@
+version: '3'
+services:
+  db:
+    image: postgres:14.1-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - '7001:5432'
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/create_tables.sql
+#      - ./db.sh:/docker-entrypoint-initdb.d/init_db.sh
+      - db:/var/lib/postgresql/data
+  cache:
+    image: redis:6.2-alpine
+    restart: always
+    ports:
+      - '6379:6379'
+    command: redis-server --save 20 1 --loglevel warning --requirepass eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
+    volumes:
+      - cache:/data
+  app:
+    image: 'car-park:latest'
+    container_name: car-park
+    depends_on:
+      - db
+      - cache
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "9092:8080"
+    expose:
+      - 9092
+    restart: unless-stopped
+    environment:
+      - TZ=Asia/Jakarta
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal:7001/postgres
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - REDIS_HOST=host.docker.internal
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
+    links:
+      - db
+      - cache
+volumes:
+  db:
+    driver: local
+  cache:
+    driver: local
+
+networks:
+  webnet:
+    external: true
