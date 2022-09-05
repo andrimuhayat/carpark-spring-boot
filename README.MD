@@ -34,11 +34,11 @@ of concern within the architecture with [Uncle Bob Clean Architecture](https://w
 
 ## Scheduler
 - The **dataset(Car information)** that provides from https://data.gov.sg/dataset/hdb-carpark-information will fetching automatically at the midnight then the data will convert from SVY21ToLatLng and do insert/update to the database. but at the first will process when system is started
-- The **Car availability** will fetch automatically from API in every 2 minutes and insert/update to database. but at the first will process when system is started
+- The **Car availability** will fetch automatically from API in every 2 minutes and insert/update to database.
 
 ## Redis Cache
 - The response data from API(/carparks/nearest?latitude=1.2855825549923094&longitude=103.80321526415918) already store in redis cache, when calling the get API then data will serve from the cache of redis
-- Data expire in redis in will 2 Minutes and when hit the API will get data from database and store it again to the redis
+- Data expire in 2 Minutes and when hit the API, it will get data from database and store it again to the redis
 
 ## How to run this project
 open terminal cd to this project's root folder and run script below
@@ -49,25 +49,25 @@ open terminal cd to this project's root folder and run script below
     {
     "data": [
         {
-            "latitude": 1.2855825549923094,
-            "longitude": 103.80321526415918,
-            "available_lots": 91,
-            "total_lots": 277,
-            "address": null,
-            "distance_in_km": 0.0
+            "latitude": 1.3420559299413872,
+            "longitude": 103.69192247618548,
+            "available_lots": 206,
+            "total_lots": 276,
+            "address": "BLK 962A JURONG WEST STREET 91",
+            "distance_in_km": 0.18
         },
         {
-            "latitude": 1.2869280256342526,
-            "longitude": 103.80670138529204,
-            "available_lots": 106,
-            "total_lots": 220,
-            "address": null,
-            "distance_in_km": 0.42
+            "latitude": 1.3396873972151573,
+            "longitude": 103.69364065669575,
+            "available_lots": 112,
+            "total_lots": 222,
+            "address": "BLK 974/980 JURONG WEST STREET 93",
+            "distance_in_km": 0.19
         }
     ],
     "page": 0,
     "perPage": 2,
-    "totalElements": 1594,
-    "totalPages": 797,
+    "totalElements": 1769,
+    "totalPages": 885,
     "last": false
-}
+    }
