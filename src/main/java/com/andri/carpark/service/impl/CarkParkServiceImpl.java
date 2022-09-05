@@ -17,6 +17,7 @@ import kong.unirest.json.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.text.DecimalFormat;
@@ -71,6 +72,7 @@ public class CarkParkServiceImpl implements CarParkService {
 	}
 
 	@Override
+	@Scheduled(cron = "0 */2 * ? * *")
 	public void fetchCarParkAvailibilty() {
 		log.info("Run fetching carParkAvailability");
 		String url = environment.getProperty("carpark.availability");
