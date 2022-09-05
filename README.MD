@@ -38,9 +38,36 @@ of concern within the architecture with [Uncle Bob Clean Architecture](https://w
 
 ## Redis Cache
 - The response data from API(/carparks/nearest?latitude=1.2855825549923094&longitude=103.80321526415918) already store in redis cache, when calling the get API then data will serve from the cache of redis
-- Data expire in redis in will 2 Minutes and will call to the db and store it again to the redis
+  - Data expire in redis in will 2 Minutes and when hit the API will get data from database and store it again to the redis
 
 ## How to run this project
 open terminal cd to this project's root folder and run script below
 
     docker-compose up
+
+## Example Response of API
+    {
+    "data": [
+        {
+            "latitude": 1.2855825549923094,
+            "longitude": 103.80321526415918,
+            "available_lots": 91,
+            "total_lots": 277,
+            "address": null,
+            "distance_in_km": 0.0
+        },
+        {
+            "latitude": 1.2869280256342526,
+            "longitude": 103.80670138529204,
+            "available_lots": 106,
+            "total_lots": 220,
+            "address": null,
+            "distance_in_km": 0.42
+        }
+    ],
+    "page": 0,
+    "perPage": 2,
+    "totalElements": 1594,
+    "totalPages": 797,
+    "last": false
+}
