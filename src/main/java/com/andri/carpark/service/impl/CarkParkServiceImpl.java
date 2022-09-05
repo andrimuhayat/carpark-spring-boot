@@ -80,6 +80,7 @@ public class CarkParkServiceImpl implements CarParkService {
 	}
 
 	@Override
+	@Scheduled(cron = "0 0 0 * * *",zone = "Asia/Jakarta")
 	public void fetchCarParkInformation() {
 		log.info("Run fetching carParkInfo");
 		try {
@@ -97,7 +98,7 @@ public class CarkParkServiceImpl implements CarParkService {
 
 			List<CarParkInformationDto> carParkInformationDtos = objectMapper.readValue(recordDataString, new TypeReference<>() {
 			});
-			carParkInformationDtos.forEach(this::InserOrUpdateCarParkInformation);
+			carParkInformationDtos.forEach(this::inserOrUpdateCarParkInformation);
 			log.info("Success Insert or update carParkInformation");
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
@@ -119,7 +120,7 @@ public class CarkParkServiceImpl implements CarParkService {
 			try {
 				List<CarParkInfoHeaderDto> carParkAvailabilityDtos = objectMapper.readValue(items.getJSONArray("carpark_data").toString(), new TypeReference<>() {
 				});
-				CompletableFuture<List<CarParks>> carParkAvailabilityList = InserOrUpdateCarParkAvailability(carParkAvailabilityDtos);
+				CompletableFuture<List<CarParks>> carParkAvailabilityList = inserOrUpdateCarParkAvailability(carParkAvailabilityDtos);
 				this.carParkRepository.saveAll(carParkAvailabilityList.get());
 				log.info("Success Insert or update carParkAvailability");
 			} catch (JsonProcessingException | ExecutionException | InterruptedException e) {
@@ -129,7 +130,7 @@ public class CarkParkServiceImpl implements CarParkService {
 	}
 
 	@Async
-	public CompletableFuture<List<CarParks>> InserOrUpdateCarParkAvailability(List<CarParkInfoHeaderDto> carParkInfoHeaderDtos) {
+	public CompletableFuture<List<CarParks>> inserOrUpdateCarParkAvailability(List<CarParkInfoHeaderDto> carParkInfoHeaderDtos) {
 		List<CarParks> carParkList = new ArrayList<>();
 		carParkInfoHeaderDtos.forEach(carParkInfoHeaderDto -> {
 			String carParkNumber = carParkInfoHeaderDto.carpark_number;
@@ -161,7 +162,7 @@ public class CarkParkServiceImpl implements CarParkService {
 	}
 
 	@Async
-	public void InserOrUpdateCarParkInformation(CarParkInformationDto carParkInformationDto) {
+	public void inserOrUpdateCarParkInformation(CarParkInformationDto carParkInformationDto) {
 		Map<String, Double> latLngData = SVY21ToLatLng(carParkInformationDto.x_coord, carParkInformationDto.y_coord);
 		CarParks carPark;
 		Optional<CarParks> carParkOpt = this.carParkRepository.findCarParksByCarPark(carParkInformationDto.car_park_no);
@@ -174,6 +175,7 @@ public class CarkParkServiceImpl implements CarParkService {
 		} else {
 			carPark = new CarParks();
 			carPark.setCarPark(carParkInformationDto.car_park_no);
+			assert latLngData != null;
 			carPark.setXcoord(latLngData.get("longitude"));
 			carPark.setYcoord(latLngData.get("latitude"));
 			carPark.setAddress(carParkInformationDto.address);
