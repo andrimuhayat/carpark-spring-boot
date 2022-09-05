@@ -8,7 +8,7 @@ of concern within the architecture with [Uncle Bob Clean Architecture](https://w
 
 ## Build with
 
-- [Java 18 - 18.0.2](https://adoptopenjdk.net/) Java 8 
+- [Java 11 - 18.0.2](https://adoptopenjdk.net/) Java 11 
 - [Maven 4.0.0](https://maven.apache.org/)
 - [Spring Boot](https://spring.io/projects/spring-boot)
 - [IntelliJ IDEA](https://www.jetbrains.com/idea/)
