@@ -1,5 +1,7 @@
 package com.andri.carpark.service.impl;
 
+import com.andri.carpark.dto.CarParkInfoDto;
+import com.andri.carpark.dto.CarParkInfoHeaderDto;
 import com.andri.carpark.dto.CarParkInformationDto;
 import com.andri.carpark.model.CarParks;
 import com.andri.carpark.repository.CarParkRepository;
@@ -10,6 +12,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kong.unirest.HttpResponse;
 import kong.unirest.JsonNode;
+import kong.unirest.json.JSONArray;
 import kong.unirest.json.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.env.Environment;
@@ -18,10 +21,9 @@ import org.springframework.stereotype.Service;
 
 import java.text.DecimalFormat;
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 @Service
 @Slf4j
@@ -66,6 +68,61 @@ public class CarkParkServiceImpl implements CarParkService {
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}
+	}
+
+	@Override
+	public void fetchCarParkAvailibilty() {
+		log.info("Run fetching carParkAvailability");
+		String url = environment.getProperty("carpark.availability");
+		HttpResponse<JsonNode> jsonResponse = unirestHttpClient.get(url, null, null);
+		String responseJSONString = jsonResponse.getBody().toString();
+		JSONObject responeJson = new JSONObject(responseJSONString);
+		JSONArray jsonArrayItems = responeJson.getJSONArray("items");
+
+		jsonArrayItems.forEach(c -> {
+			JSONObject items = new JSONObject(c.toString());
+			try {
+				List<CarParkInfoHeaderDto> carParkAvailabilityDtos = objectMapper.readValue(items.getJSONArray("carpark_data").toString(), new TypeReference<>() {
+				});
+				CompletableFuture<List<CarParks>> carParkAvailabilityList = InserOrUpdateCarParkAvailability(carParkAvailabilityDtos);
+				this.carParkRepository.saveAll(carParkAvailabilityList.get());
+				log.info("Success Insert or update carParkAvailability");
+			} catch (JsonProcessingException | ExecutionException | InterruptedException e) {
+				e.printStackTrace();
+			}
+		});
+	}
+
+	@Async
+	public CompletableFuture<List<CarParks>> InserOrUpdateCarParkAvailability(List<CarParkInfoHeaderDto> carParkInfoHeaderDtos) {
+		List<CarParks> carParkList = new ArrayList<>();
+		carParkInfoHeaderDtos.forEach(carParkInfoHeaderDto -> {
+			String carParkNumber = carParkInfoHeaderDto.carpark_number;
+			int totalLoats = 0;
+			int lotsAvailable = 0;
+			Optional<CarParks> carParkOpt = this.carParkRepository.findCarParksByCarPark(carParkNumber);
+
+			for (CarParkInfoDto c : carParkInfoHeaderDto.carpark_info) {
+				totalLoats += Integer.parseInt(c.total_lots);
+				lotsAvailable += Integer.parseInt(c.lots_available);
+			}
+
+			CarParks carPark;
+			if (carParkOpt.isPresent()) {
+				carPark = carParkOpt.get();
+				carPark.setTotalLots(totalLoats);
+				carPark.setAvailableLots(lotsAvailable);
+				carPark.setUpdatedAt(Instant.now());
+
+			} else {
+				carPark = new CarParks();
+				carPark.setTotalLots(totalLoats);
+				carPark.setAvailableLots(lotsAvailable);
+				carPark.setCarPark(carParkNumber);
+			}
+			carParkList.add(carPark);
+		});
+		return CompletableFuture.completedFuture(carParkList);
 	}
 
 	@Async
