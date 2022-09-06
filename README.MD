@@ -37,7 +37,7 @@ of concern within the architecture with [Uncle Bob Clean Architecture](https://w
 - The **Car availability** will fetch automatically from API in every 2 minutes and insert/update to database.
 
 ## Redis Cache
-- The response data from API(/carparks/nearest?latitude=1.2855825549923094&longitude=103.80321526415918) already store in redis cache, when calling the get API then data will serve from the cache of redis
+- The response data from API(/carparks/nearest?latitude=1.2855825549923094&longitude=103.80321526415918&page=0&per_page=2) already store in redis cache, when calling the get API then data will serve from the cache of redis
 - Data expire in 2 Minutes and when hit the API, it will get data from database and store it again to the redis
 
 ## How to run this project
