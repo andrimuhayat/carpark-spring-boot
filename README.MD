@@ -47,6 +47,7 @@ open terminal cd to this project's root folder and run script below
 
 ## Example Response of API
     GET - /carparks/nearest?latitude=1.2855825549923094&longitude=103.80321526415918&page=0&per_page=2
+ 
     {
     "data": [
         {
